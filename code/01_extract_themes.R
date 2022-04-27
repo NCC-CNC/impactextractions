@@ -5,9 +5,9 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 
-# Read-in NCC project mgmt. plan boundaries ------------------------------------
+# Read-in NCC achievement boundaries -------------------------------------------
 
-PMP <- read_sf(file.path("appdata", "pmp", "Parcels_20210531_Achievements_prjEA_RRupdate.shp")) %>%
+PMP <- read_sf(file.path("appdata", "achievements", "NCC_Accomplishments_April_2022.shp")) %>%
   filter(!is.na(NAME)) %>%
   # Set to rater projection (not sure about this coordinate system...)
   st_transform(crs = st_crs("+proj=aea +lat_0=40 +lon_0=-96 +lat_1=50 +lat_2=70 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs "))
@@ -131,11 +131,6 @@ PMP_tmp$id <- 1:nrow(PMP_tmp)
 # Project PMP to WGS 84
 PMP <- PMP %>% st_transform(crs = st_crs(4326))
 
-# # Save clean data --------------------------------------------------------------
-
-# Subset PMP for dev purposes
-PMP_sub <- PMP_tmp %>% filter(REGION == "Alberta Region")
-
-# Save data for shiny app
-save(PMP, PMP_tmp, PMP_sub, PMP_feat_stack_mean, PMP_spp_stack_mean,
+# Save data for shiny app ------------------------------------------------------
+save(PMP, PMP_tmp, PMP_feat_stack_mean, PMP_spp_stack_mean,
      file = file.path("appdata", "basedata.RData"))
