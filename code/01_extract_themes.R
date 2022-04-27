@@ -4,6 +4,7 @@ library(exactextractr)
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(stringr)
 
 # Read-in NCC achievement boundaries -------------------------------------------
 
@@ -121,16 +122,24 @@ PMP_spp_stack_mean <- PMP_spp_stack_mean %>%
   mutate(across(everything(), ~ replace_na(.x, 0)))
 
 # Combine all extractions into one sf object -----------------------------------
-PMP_tmp <- cbind(PMP, PMP_feat_stack_mean, PMP_spp_stack_mean) %>%
-  st_transform(crs = st_crs(4326)) %>% # WGS 84
-  st_make_valid()
+PMP_tmp <- cbind(PMP, PMP_feat_stack_mean, PMP_spp_stack_mean)
 
-# Assign unique-ID
-PMP_tmp$id <- 1:nrow(PMP_tmp)
+# Clean geometry, populate id 
+PMP_tmp <- PMP_tmp %>% 
+  st_make_valid() %>%
+  mutate("id" = row_number())
 
-# Project PMP to WGS 84
-PMP <- PMP %>% st_transform(crs = st_crs(4326))
+# Remove 'Region' and 'Territory' from REGION field
+PMP_tmp <- PMP_tmp %>% 
+  mutate(REGION = str_remove_all(REGION, " Region")) %>%
+  mutate(REGION = str_remove_all(REGION, " Territory")) 
+  
+# Calculate area ha 
+PMP_tmp$Area_ha <- units::drop_units(units::set_units(st_area(PMP_tmp), value = ha))
+
+# Project to WGS
+PMP_tmp <- st_transform(PMP_tmp, crs = st_crs(4326))
 
 # Save data for shiny app ------------------------------------------------------
-save(PMP, PMP_tmp, PMP_feat_stack_mean, PMP_spp_stack_mean,
+save(PMP_tmp, PMP_feat_stack_mean, PMP_spp_stack_mean,
      file = file.path("appdata", "basedata.RData"))
