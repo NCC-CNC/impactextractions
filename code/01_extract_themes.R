@@ -67,9 +67,9 @@ feat_stack <- c(frst, gras, wetl, rivr, laks, shrl, cfor, cref, csta, cseq, fwat
 feat_stack <- terra::setMinMax(feat_stack)
 
 names(feat_stack) <- c("Forest", "Grassland", "Wetland", "River", "Lakes",
-                       "Shoreline", "Climate_velocity", "Climate_refugia",
-                       "Carbon_current", "Carbon_potential","Freshwater",
-                       "Recreation")
+                       "Shore", "Climate_V", "Climate_R",
+                       "Carbon_C", "Carbon_P","Freshwater",
+                       "Rec")
 
 # Read-in species themes: ------------------------------------------------------
 
@@ -101,9 +101,9 @@ SPP_NSC <- rast(file.path("appdata", "themes", "albers", "NSC_SPPsum.tif"))
 
 spp_stack <- c(SAR, amph, bird, mamm, rept, SAR_NSC, END_NSC, SPP_NSC)
 spp_stack <- terra::setMinMax(spp_stack)
-names(spp_stack) <- c("Species_at_Risk_ECCC", "Amphibians_IUCN", "Birds_IUCN",
-                      "Mammals_IUCN","Reptiles_IUCN", "Species_at_Risk_NSC",
-                      "Endemics_NSC", "Biodiversity_NSC")
+names(spp_stack) <- c("ECCC_SAR", "IUCN_AMPH", "IUCN_BIRD",
+                      "IUCN_MAMM","IUCN_REPT", "NSC_SAR",
+                      "NSC_END", "NSC_SPP")
 
 # Extract raster variables to PMP ----------------------------------------------
 
@@ -141,5 +141,4 @@ PMP_tmp$Area_ha <- units::drop_units(units::set_units(st_area(PMP_tmp), value = 
 PMP_tmp <- st_transform(PMP_tmp, crs = st_crs(4326))
 
 # Save data for shiny app ------------------------------------------------------
-save(PMP_tmp, PMP_feat_stack_mean, PMP_spp_stack_mean,
-     file = file.path("appdata", "basedata.RData"))
+save(PMP_tmp, file = file.path("appdata", "basedata.RData"))
