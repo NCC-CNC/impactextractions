@@ -39,23 +39,57 @@ ncc_stats <- ncc %>%
   drop_na() %>%
   mutate(YEAR = as.numeric(format(SE_DATE, format = "%Y"))) %>%
   group_by(YEAR) %>%
-  summarise(tot_ha =  sum(round(Area_ha, 0)),
-            tot_shore =  sum(round(Shore, 0)),
-            tot_lake =  sum(round(Lakes, 0)),
-            tot_forest =  sum(round(Forest, 0)),
-            tot_wet =  sum(round(Wetland, 0)),
-            tot_grass =  sum(round(Grassland, 0)),
-            tot_river = sum(round(River, 0)),
-            tot_carbon_c = sum(round(Carbon_C, 0)),
-            tot_carbon_p = sum(round(Carbon_P, 0)),
-            tot_eccc_sar =  sum(round(ECCC_SAR, 0))) %>%
+  summarise(tot_ha =  round(sum(Area_ha, 0)),
+            tot_forest = round(sum(Forest, 0)),
+            tot_grass =  round(sum(Grassland, 0)),
+            tot_wet =  round(sum(Wetland, 0)),
+            tot_river =  round(sum(River, 0)),
+            tot_lake =  round(sum(Lakes, 0)),
+            tot_shore =  round(sum(Shore, 0)),
+            tot_carbon_c = round(sum(Carbon_C, 0)),
+            tot_carbon_p = round(sum(Carbon_P, 0))) %>%
   arrange(YEAR) %>%
-  mutate(tot_cum_ha = cumsum(tot_ha)) %>%
-  mutate(tot_cum_river = cumsum(tot_river)) %>%
-  mutate(tot_cum_carbon_c = cumsum(tot_carbon_c)) %>%
-  mutate(tot_cum_cabon_p = cumsum(tot_carbon_p)) %>%
-  mutate(tot_cum_eccc_sar = cumsum(tot_eccc_sar)) %>%
-  filter(YEAR > 1960)
+  mutate(c_ha = cumsum(tot_ha)) %>%
+  mutate(c_forest = cumsum(tot_forest)) %>%
+  mutate(c_grass = cumsum(tot_grass)) %>%
+  mutate(c_wet = cumsum(tot_wet)) %>%
+  mutate(c_river = cumsum(tot_river)) %>%
+  mutate(c_lake = cumsum(tot_lake)) %>%
+  mutate(c_shore = cumsum(tot_shore)) %>%
+  mutate(c_carbon_c = cumsum(tot_carbon_c)) %>%
+  mutate(c_carbon_p = cumsum(tot_carbon_p))
+
+# Yearly impact
+ncc_stats_yearly <- data.frame(
+  "Year" = ncc_stats$YEAR,
+  "Area (ha)" = ncc_stats$tot_ha,
+  "Forest (ha)" = ncc_stats$tot_forest,
+  "Grassland (ha)" = ncc_stats$tot_grass,
+  "Wetland (ha)" = ncc_stats$tot_wet,
+  "Rivers (km)" = ncc_stats$tot_river,
+  "Lakes (ha)" = ncc_stats$tot_lake,
+  "Shore (km)" = ncc_stats$tot_shore,
+  "Current Carbon (tonnes)" = ncc_stats$tot_carbon_c,
+  "Carbon Potential (tonnes/yr)" = ncc_stats$tot_carbon_p,
+  check.names = FALSE
+)
+write.csv(ncc_stats_yearly, "C:/Github/impactextractions/appdata/plots/impact_yearly_nov3_2022.csv", row.names = FALSE)
+
+# Cumulative impact
+ncc_stats_cumlative <- data.frame(
+  "Year" = ncc_stats$YEAR,
+  "Area (ha)" = ncc_stats$c_ha,
+  "Forest (ha)" = ncc_stats$c_forest,
+  "Grassland (ha)" = ncc_stats$c_grass,
+  "Wetland (ha)" = ncc_stats$c_wet,
+  "Rivers (km)" = ncc_stats$c_river,
+  "Lakes (ha)" = ncc_stats$c_lake,
+  "Shore (km)" = ncc_stats$c_shore,
+  "Current Carbon (tonnes)" = ncc_stats$c_carbon_c,
+  "Carbon Potential (tonnes/yr)" = ncc_stats$c_carbon_p,
+  check.names = FALSE
+)
+write.csv(ncc_stats_cumlative, "C:/Github/impactextractions/appdata/plots/impact_cumulative_nov3_2022.csv", row.names = FALSE)
 
 # Create year-over-year plots ----
 ## Area ----
