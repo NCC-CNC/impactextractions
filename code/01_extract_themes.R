@@ -5,10 +5,11 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(stringr)
+library(raster)
 
 # Read-in NCC achievement boundaries -------------------------------------------
 
-PMP <- read_sf(file.path("appdata", "achievements", "NCC_Accomplishments_April_2022.shp")) %>%
+PMP <- read_sf(file.path("appdata", "achievements", "NCC_20221122.shp")) %>%
   filter(!is.na(NAME)) %>%
   # Set to rater projection (not sure about this coordinate system...)
   st_transform(crs = st_crs("+proj=aea +lat_0=40 +lon_0=-96 +lat_1=50 +lat_2=70 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs "))
@@ -61,15 +62,21 @@ fwat <- rast(file.path("appdata", "themes", "albers", "water_provision_2a_norm.t
 # Recreation
 recr <- rast(file.path("appdata", "themes", "albers", "rec_pro_1a_norm.tif"))
 
+# Pollination
+epf <- rast(file.path("appdata", "themes", "albers", "epf_natural_habitat_sum.tif"))
+marketv <- rast(file.path("appdata", "themes", "albers", "marketvalue_natural_habitat_sum.tif")) 
+
+
 # Stack feature rasters --------------------------------------------------------
 
-feat_stack <- c(frst, gras, wetl, rivr, laks, shrl, cfor, cref, csta, cseq, fwat, recr)
+feat_stack <- c(frst, gras, wetl, rivr, laks, shrl, cfor, cref, csta, cseq, fwat, 
+                recr, epf, marketv)
 feat_stack <- terra::setMinMax(feat_stack)
 
 names(feat_stack) <- c("Forest", "Grassland", "Wetland", "River", "Lakes",
                        "Shore", "Climate_V", "Climate_R",
                        "Carbon_C", "Carbon_P","Freshwater",
-                       "Rec")
+                       "Rec", "EPF", "Market_V")
 
 # Read-in species themes: ------------------------------------------------------
 
@@ -124,18 +131,23 @@ PMP_spp_stack_mean <- PMP_spp_stack_mean %>%
 # Combine all extractions into one sf object -----------------------------------
 PMP_tmp <- cbind(PMP, PMP_feat_stack_mean, PMP_spp_stack_mean)
 
-# Clean geometry, populate id 
+# Clean geometry, populate ids 
 PMP_tmp <- PMP_tmp %>% 
   st_make_valid() %>%
-  mutate("id" = row_number())
+  mutate("id" = row_number()) %>%
+  mutate("OBJECTID" = row_number())
 
 # Remove 'Region' and 'Territory' from REGION field
 PMP_tmp <- PMP_tmp %>% 
-  mutate(REGION = str_remove_all(REGION, " Region")) %>%
+  mutate(REGION = str_remove_all(REG_NM_EN, " Region")) %>%
   mutate(REGION = str_remove_all(REGION, " Territory")) 
   
 # Calculate area ha 
 PMP_tmp$Area_ha <- units::drop_units(units::set_units(st_area(PMP_tmp), value = ha))
+write_sf(PMP_tmp, "C:/Data/National/NCC_Accomplishments/Extractions/NCC_Extracted_20221122.shp")
+
+# Remove confidential properties
+PMP_tmp <- PMP_tmp %>% filter(CONF == 0)
 
 # Project to WGS
 PMP_tmp <- st_transform(PMP_tmp, crs = st_crs(4326))
