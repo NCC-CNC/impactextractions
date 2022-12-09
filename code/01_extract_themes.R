@@ -90,7 +90,7 @@ amph <- rast(file.path("appdata", "themes", "albers", "amph_sum.tif"))
 bird <- rast(file.path("appdata", "themes", "albers", "bird_sum.tif"))
 
 # Mammal - IUCN
-mamm <- rast(file.path("appdata", "themes", "albers", "bird_sum.tif"))
+mamm <- rast(file.path("appdata", "themes", "albers", "mamm_sum.tif"))
 
 # Reptile - ICUN
 rept <- rast(file.path("appdata", "themes", "albers", "rept_sum.tif"))
