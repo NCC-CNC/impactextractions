@@ -9,7 +9,7 @@ library(raster)
 
 # Set file names ----
 INPUT_SHP_NAME <- "GIS_NCC_ACCOMPLISHMENTS_20221122.shp"
-OUTPUT_SHP_PATH <- "C:/Data/National/NCC_Accomplishments/Extractions/NCC_ACCOMPLISHMENTS_EXTRACTED_20221122.shp"
+OUTPUT_SHP_PATH <- "C:/Data/NAT/NCC_Accomplishments/Extractions/NCC_ACCOMPLISHMENTS_EXTRACTED_20221122.shp"
 
 # Read-in NCC achievements ----
 PMP <- read_sf(file.path("appdata", "achievements", INPUT_SHP_NAME)) %>%
@@ -19,11 +19,14 @@ PMP <- read_sf(file.path("appdata", "achievements", INPUT_SHP_NAME)) %>%
 
 # Read-in conservation features ----
 ## Forest
-frst <- rast(file.path("appdata", "themes", "albers",
-                       "CA_forest_VLCE_2015_forest_only_ha_proj_scale.tif"))
+frst_lc <- rast(file.path("appdata", "themes", "albers",
+                       "FOREST_LC_COMPOSITE_1KM.tif"))
+
+frst_lu <- rast(file.path("appdata", "themes", "albers",
+                          "FOREST_LU_COMPOSITE_1KM.tif"))
 ## Grassland
 gras <- rast(file.path("appdata", "themes", "albers",
-                        "AAFC_LU2015_comb_masked_by_Prairie_grassland_comb.tif"))
+                        "Grassland_AAFC_LUTS_Total_Percent.tif"))
 ## Wetlands
 wetl <- rast(file.path("appdata", "themes", "albers",
                        "Wetland_comb_proj_diss_90m_Arc.tif"))
@@ -36,12 +39,15 @@ laks <- rast(file.path("appdata", "themes", "albers",
 ## Shoreline
 shrl <- rast(file.path("appdata", "themes", "albers",
                        "Shoreline.tif"))
-## Climate Velocity
-cfor <- rast(file.path("appdata", "themes", "albers",
-                       "fwdshortestpath.tif"))
+## Climate Forward Velocity
+cvel <- rast(file.path("appdata", "themes", "albers",
+                       "Climate_FwdShortestPath_2080_RCP85.tif"))
 ## Climate Refugia
 cref <- rast(file.path("appdata", "themes", "albers",
-                       "NA_combo_refugia_sum45.tif"))
+                       "Climate_Refugia_2080_RCP85.tif"))
+## Climate Extremes
+cext <- rast(file.path("appdata", "themes", "albers",
+                       "Climate_LaSorte_ExtremeHeatEvents.tif"))
 # Carbon Current
 csta <- rast(file.path("appdata", "themes", "albers",
                        "Carbon_Mitchell_2021_t.tif")) 
@@ -51,6 +57,10 @@ cseq <- rast(file.path("appdata", "themes", "albers",
 # Freshwater
 fwat <- rast(file.path("appdata", "themes", "albers", 
                        "water_provision_2a_norm.tif"))
+# Human Footprint Index
+hfi <- rast(file.path("appdata", "themes", "albers", 
+                      "CDN_HF_cum_threat_20221031_NoData.tif"))
+
 # Recreation
 recr <- rast(file.path("appdata", "themes", "albers", 
                        "rec_pro_1a_norm.tif"))
@@ -63,17 +73,20 @@ marketv <- rast(file.path("appdata", "themes", "albers",
 
 # Stack conservation feature rasters ----
 
-feat_stack <- c(frst, gras, wetl, rivr, laks, shrl, cfor, 
-                cref, csta, cseq, fwat, recr, epf, marketv)
+feat_stack <- c(frst_lc, frst_lu, gras, 
+                wetl, rivr, laks, shrl, 
+                cvel, cref, cext, 
+                csta, cseq, 
+                fwat, hfi, recr, 
+                epf, marketv)
 
 feat_stack <- terra::setMinMax(feat_stack)
 
-names(feat_stack) <- c("Forest", "Grassland", 
-                       "Wetland", "River", 
-                       "Lakes","Shore", 
-                       "Climate_V", "Climate_R",
+names(feat_stack) <- c("Forest_LC", "Forest_LU", "Grassland", 
+                       "Wetland", "River", "Lakes","Shore", 
+                       "Climate_V", "Climate_R", "Climate_E",
                        "Carbon_C", "Carbon_P",
-                       "Freshwater","Rec", 
+                       "Freshwater", "HF_IDX", "Rec", 
                        "EPF", "Market_V")
 
 # Read-in species ----
@@ -151,7 +164,7 @@ PMP_tmp <- PMP_tmp %>%
 PMP_tmp$Area_ha <- units::drop_units(units::set_units(st_area(PMP_tmp), value = ha))
 
 ## Write extractions to disk as .shp
-write_sf(PMP_tmp, OUTPUT_SHP_PATH)
+write_sf(PMP_tmp, OUTPUT_SHP_PATH) # <--- This comes with warnings
 
 ## Remove confidential properties for impact app
 PMP_tmp <- PMP_tmp %>% filter(CONF == 0)
